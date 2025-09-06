@@ -16,6 +16,7 @@ class KadeEngineMode extends BaseOptionsMenu
         'kadeEngineMode', //Save data variable name
         'bool'); //Variable type
         addOption(option);
+        option.onChange = ;
 
         var option:Option = new Option('nps Display', //Name
         'If checked, Nps UI is Visible', //Description
@@ -34,6 +35,30 @@ class KadeEngineMode extends BaseOptionsMenu
         }*/
 
         super();
+    }
+
+    private function KEModeStart()
+    {
+        // Kade Engine Mode
+        if (curOption.name == "KE Mode" && ClientPrefs.data.kadeEngineMode)
+        {
+            ClientPrefs.data.framerate = 120;
+        }
+        else if (curOption.name == "KE Mode" && !ClientPrefs.data.kadeEngineMode)
+        {
+            ClientPrefs.data.framerate = 60;
+        }
+
+        if(ClientPrefs.data.framerate > FlxG.drawFramerate)
+        {
+            FlxG.updateFramerate = ClientPrefs.data.framerate;
+            FlxG.drawFramerate = ClientPrefs.data.framerate;
+        }
+        else
+        {
+            FlxG.drawFramerate = ClientPrefs.data.framerate;
+            FlxG.updateFramerate = ClientPrefs.data.framerate;
+        }
     }
 
     /*override function update(elapsed:Float)

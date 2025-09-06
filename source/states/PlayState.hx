@@ -754,8 +754,13 @@ class PlayState extends MusicBeatState
 	#end
 
 	public function reloadHealthBarColors() {
-		healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
+		if (KEmode) {
+			healthBar.setColors(FlxColor.fromRGB(255, 0, 0), FlxColor.fromRGB(0, 255, 0));
+		}
+		else {
+			healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
 			FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]));
+		}
 	}
 
 	public function addCharacterToList(newCharacter:String, type:Int) {
@@ -2550,16 +2555,29 @@ class PlayState extends MusicBeatState
 		//tryna do MS based judgment due to popular demand
 		var daRating:Rating = Conductor.judgeNote(ratingsData, noteDiff / playbackRate);
 
-		switch (daRating.name)
-		{
-			case 'shit':
-				shits++;
-			case 'bad':
-				bads++;
-			case 'good':
-				goods++;
-			case 'sick':
-				sicks++;
+		var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
+		if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
+
+		if (KEmode) {
+			switch (daRating.name)
+			{
+				case 'shit':
+					shits++;
+
+					songScore -= 300;
+					combo = 0;
+					songMisses++;
+					health -= (note.missHealth - 0.04) * healthLoss;
+				case 'bad':
+					bads++;
+
+					health -= (note.missHealth - 0.08) * healthLoss;
+				case 'good':
+					goods++;
+				case 'sick':
+					sicks++;
+					if (gainHealth) health += note.hitHealth * healthGain;
+			}
 		}
 
 		totalNotesHit += daRating.ratingMod;
@@ -2651,12 +2669,12 @@ class PlayState extends MusicBeatState
 
 		if (KEmode) {
 			currentTimingShown.screenCenter();
-			currentTimingShown.x = comboSpr.x + 100;
+			currentTimingShown.x = rating.x + 100;
 			currentTimingShown.y = rating.y + 100;
 			currentTimingShown.acceleration.y = 600;
 			currentTimingShown.velocity.y -= 150;
 
-			currentTimingShown.velocity.x += comboSpr.velocity.x;
+			currentTimingShown.velocity.x += rating.velocity.x;
 
 			currentTimingShown.updateHitbox();
 			currentTimingShown.cameras = [camHUD];
@@ -2957,7 +2975,7 @@ class PlayState extends MusicBeatState
 	function noteMissCommon(direction:Int, note:Note = null)
 	{
 		// score and data
-		var subtract:Float = 0.05;
+		var subtract:Float = 0.1;
 		if(note != null) subtract = note.missHealth;
 
 		// GUITAR HERO SUSTAIN CHECK LOL!!!!
@@ -3008,7 +3026,18 @@ class PlayState extends MusicBeatState
 		var lastCombo:Int = combo;
 		combo = 0;
 
-		health -= subtract * healthLoss;
+		if (KEmode) {
+			if (note != null) {
+				if (!note.isSustainNote)
+					health -= subtract * healthLoss;
+			}
+			else {
+				health -= subtract * healthLoss;
+			}
+		}
+		else {
+			health -= subtract * healthLoss;
+		}
 		if(!practiceMode) songScore -= 10;
 		if(!endingSong) songMisses++;
 		totalPlayed++;
@@ -3154,9 +3183,12 @@ class PlayState extends MusicBeatState
 			if(combo > 9999) combo = 9999;
 			popUpScore(note);
 		}
-		var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
-		if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
-		if (gainHealth) health += note.hitHealth * healthGain;
+
+		if (!KEmode) {
+			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
+			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
+			if (gainHealth) health += note.hitHealth * healthGain;
+		}
 
 		var result:Dynamic = callOnLuas('goodNoteHit', [notes.members.indexOf(note), leData, leType, isSus]);
 		if(result != LuaUtils.Function_Stop && result != LuaUtils.Function_StopHScript && result != LuaUtils.Function_StopAll) callOnHScript('goodNoteHit', [note]);
@@ -3258,6 +3290,16 @@ class PlayState extends MusicBeatState
 		if (KEmode) {
 			iconP1.setGraphicSize(Std.int(iconP1.width + 30));
 			iconP2.setGraphicSize(Std.int(iconP2.width + 30));
+
+			// 记得修复
+
+			if (KEmode) {
+				healthBar.setColors(FlxColor.fromRGB(255, 0, 0), FlxColor.fromRGB(0, 255, 0));
+			}
+			else {
+				healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
+				FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]));
+			}
 		}
 		else {
 			iconP1.scale.set(1.2, 1.2);
