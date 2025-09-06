@@ -80,6 +80,7 @@ import states.TitleState;
 	public var kadeEngineMode:Bool = false;
 
 	public var npsDisplay:Bool = true;
+	public var healthBarColor:Bool = false;
 }
 
 class ClientPrefs {

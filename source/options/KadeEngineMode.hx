@@ -16,11 +16,18 @@ class KadeEngineMode extends BaseOptionsMenu
         'kadeEngineMode', //Save data variable name
         'bool'); //Variable type
         addOption(option);
-        option.onChange = ;
+        option.onChange = kEModeStart;
 
         var option:Option = new Option('nps Display', //Name
         'If checked, Nps UI is Visible', //Description
         'npsDisplay', //Save data variable name
+        'bool'); //Variable type
+        addOption(option);
+        kadeArray.push(option);
+
+        var option:Option = new Option('healthBar Color KE', //Name
+        'If checked, healthBar Color is Red and Green', //Description
+        'healthBarColor', //Save data variable name
         'bool'); //Variable type
         addOption(option);
         kadeArray.push(option);
@@ -37,7 +44,7 @@ class KadeEngineMode extends BaseOptionsMenu
         super();
     }
 
-    private function KEModeStart()
+    private function kEModeStart()
     {
         // Kade Engine Mode
         if (curOption.name == "KE Mode" && ClientPrefs.data.kadeEngineMode)

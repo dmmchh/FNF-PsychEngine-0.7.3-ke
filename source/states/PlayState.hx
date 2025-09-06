@@ -754,7 +754,7 @@ class PlayState extends MusicBeatState
 	#end
 
 	public function reloadHealthBarColors() {
-		if (KEmode) {
+		if (KEmode && ClientPrefs.data.healthBarColor) {
 			healthBar.setColors(FlxColor.fromRGB(255, 0, 0), FlxColor.fromRGB(0, 255, 0));
 		}
 		else {
@@ -3292,14 +3292,6 @@ class PlayState extends MusicBeatState
 			iconP2.setGraphicSize(Std.int(iconP2.width + 30));
 
 			// 记得修复
-
-			if (KEmode) {
-				healthBar.setColors(FlxColor.fromRGB(255, 0, 0), FlxColor.fromRGB(0, 255, 0));
-			}
-			else {
-				healthBar.setColors(FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]),
-				FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]));
-			}
 		}
 		else {
 			iconP1.scale.set(1.2, 1.2);
