@@ -2,9 +2,13 @@ package options;
 
 class KadeEngineMode extends BaseOptionsMenu
 {
+    public var kadeArray:Array<Option> = [];
+
+        // 明日修复
+
     public function new()
     {
-        title = 'Kade Engine Mode';
+        title = 'Kade Engine Mode Settings';
         rpcTitle = 'Kade Engine Mode Menu';
 
         var option:Option = new Option('KE Mode', //Name
@@ -13,6 +17,82 @@ class KadeEngineMode extends BaseOptionsMenu
         'bool'); //Variable type
         addOption(option);
 
+        var option:Option = new Option('nps Display', //Name
+        'If checked, Nps UI is Visible', //Description
+        'npsDisplay', //Save data variable name
+        'bool'); //Variable type
+        addOption(option);
+        kadeArray.push(option);
+
+        /*if (!ClientPrefs.data.kadeEngineMode)
+        {
+            for (i in 0...kadeArray.length)
+            {
+                //grpOptions[i].visible = false;
+                optionsArray.remove(kadeArray[i]);
+            }
+        }*/
+
         super();
     }
+
+    /*override function update(elapsed:Float)
+    {
+        super.update(elapsed);
+
+        if (ClientPrefs.data.kadeEngineMode)
+        {
+            if (optionsArray[1] == null)
+            {
+                for (i in 0...kadeArray.length)
+                {
+                    var e = i + 1;
+
+                    optionsArray.push(kadeArray[i]);
+
+                    for (item in grpOptions.members)
+                    {
+                        if (item.ID == e)
+                        {
+                            item.visible = true;
+                        }
+                    }
+                    for (item in checkboxGroup.members)
+                    {
+                        if (item.ID == e)
+                        {
+                            item.visible = true;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (optionsArray[1] != null)
+            {
+                for (i in 0...kadeArray.length)
+                {
+                    var e = i + 1;
+
+                    optionsArray.remove(kadeArray[i]);
+
+                    for (item in grpOptions.members)
+                    {
+                        if (item.ID == e)
+                        {
+                            item.visible = false;
+                        }
+                    }
+                    for (item in checkboxGroup.members)
+                    {
+                        if (item.ID == e)
+                        {
+                            item.visible = false;
+                        }
+                    }
+                }
+            }
+        }
+    }*/
 }

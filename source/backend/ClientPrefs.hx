@@ -78,6 +78,8 @@ import states.TitleState;
 
 	// Kade Engine Mode
 	public var kadeEngineMode:Bool = false;
+
+	public var npsDisplay:Bool = true;
 }
 
 class ClientPrefs {

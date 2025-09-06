@@ -33,7 +33,7 @@ class FPSCounter extends TextField
 		currentFPS = 0;
 		selectable = false;
 		mouseEnabled = false;
-		defaultTextFormat = new TextFormat("_sans", 14, color);
+		defaultTextFormat = new TextFormat("_sans", 12, color);
 		autoSize = LEFT;
 		multiline = true;
 		text = "FPS: ";
@@ -65,11 +65,18 @@ class FPSCounter extends TextField
 
 	public dynamic function updateText():Void { // so people can override it in hscript
 		text = 'FPS: ${currentFPS}';
-		// + '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
+		/* + '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
 
-		// textColor = 0xFFFFFFFF;
-		// if (currentFPS < FlxG.drawFramerate * 0.5)
-		// 	textColor = 0xFFFF0000;
+		textColor = 0xFFFFFFFF;
+		if (currentFPS < FlxG.drawFramerate * 0.5)
+			textColor = 0xFFFF0000;*/
+
+		
+		#if (gl_stats && !disable_cffi && (!html5 || !canvas))
+		text += "\ntotalDC: " + Context3DStats.totalDrawCalls();
+		text += "\nstageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE);
+		text += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);
+		#end
 	}
 
 	inline function get_memoryMegas():Float

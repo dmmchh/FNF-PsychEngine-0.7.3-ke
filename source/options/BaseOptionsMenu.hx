@@ -154,6 +154,16 @@ class BaseOptionsMenu extends MusicBeatSubstate
 					curOption.setValue((curOption.getValue() == true) ? false : true);
 					curOption.change();
 					reloadCheckboxes();
+
+					// Kade Engine Mode
+					if (curOption.name == "KE Mode" && (curOption.getValue() == true) ? false : true)
+					{
+						ClientPrefs.data.framerate = 120;
+					}
+					else if (curOption.name == "KE Mode" && !(curOption.getValue() == true) ? false : true)
+					{
+						ClientPrefs.data.framerate = 60;
+					}
 				}
 			}
 			else

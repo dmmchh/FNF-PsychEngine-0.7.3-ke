@@ -267,6 +267,20 @@ class PlayState extends MusicBeatState
 	// Kade Engine Mode
 	public var KEmode:Bool;
 
+	public static var loadRep:Bool = false;
+	public static var originalX:Float;
+
+	public static var shits:Int = 0;
+	public static var bads:Int = 0;
+	public static var goods:Int = 0;
+	public static var sicks:Int = 0;
+
+	var songScoreDef:Int = 0;
+
+	var notesHitArray:Array<Date> = [];
+	var nps:Int = 0;
+	var maxNPS:Int = 0;
+
 	public var currentTimingShown:FlxText = null;
 	public var timeShown = 0;
 
@@ -304,6 +318,17 @@ class PlayState extends MusicBeatState
 
 		// Kade Engine Mode
 		KEmode = ClientPrefs.data.kadeEngineMode;
+
+		if (KEmode)
+		{
+			if (!isStoryMode)
+			{
+				sicks = 0;
+				bads = 0;
+				shits = 0;
+				goods = 0;
+			}
+		}
 
 		// var gameCam:FlxCamera = FlxG.camera;
 		camGame = initPsychCamera();
@@ -482,6 +507,7 @@ class PlayState extends MusicBeatState
 		add(uiGroup);
 
 		Conductor.songPosition = -5000 / Conductor.songPosition;
+
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -497,8 +523,12 @@ class PlayState extends MusicBeatState
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
-		uiGroup.add(timeBar);
-		uiGroup.add(timeTxt);
+
+		if (KEmode) {}
+		else {
+			uiGroup.add(timeBar);
+			uiGroup.add(timeTxt);
+		}
 
 		strumLineNotes = new FlxTypedGroup<StrumNote>();
 		noteGroup.add(strumLineNotes);
@@ -559,10 +589,23 @@ class PlayState extends MusicBeatState
 		iconP2.alpha = ClientPrefs.data.healthBarAlpha;
 		uiGroup.add(iconP2);
 
-		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
-		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		scoreTxt.scrollFactor.set();
-		scoreTxt.borderSize = 1.25;
+		if (KEmode) {
+			scoreTxt = new FlxText(FlxG.width / 2 - 235, healthBar.y + 50, 0, "", 20);
+
+			scoreTxt.screenCenter(X);
+	
+			originalX = scoreTxt.x;
+	
+			scoreTxt.scrollFactor.set();
+	
+			scoreTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		}
+		else {
+			scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
+			scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			scoreTxt.scrollFactor.set();
+			scoreTxt.borderSize = 1.25;
+		}
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		updateScore(false);
 		uiGroup.add(scoreTxt);
@@ -1120,27 +1163,45 @@ class PlayState extends MusicBeatState
 	// `updateScore = function(miss:Bool = false) { ... }
 	// its like if it was a variable but its just a function!
 	// cool right? -Crow
-	public dynamic function updateScore(miss:Bool = false)
+	public dynamic function updateScore(miss:Bool = false, npsB:Bool = false)
 	{
+		if (npsB) {
+			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			return;
+		}
+
 		var ret:Dynamic = callOnScripts('preUpdateScore', [miss], true);
 		if (ret == LuaUtils.Function_Stop)
 			return;
 
-		var str:String = ratingName;
-		if(totalPlayed != 0)
-		{
+		if (KEmode) {
 			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-			str += ' (${percent}%) - ${ratingFC}';
+
+			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+
+			/*var lengthInPx = scoreTxt.textField.length * scoreTxt.frameHeight; // bad way but does more or less a better job
+	
+			scoreTxt.x = (originalX - (lengthInPx / 2)) + 335;*/
+			scoreTxt.screenCenter(X);
+		}
+		else {
+			var str:String = ratingName;
+			if(totalPlayed != 0)
+			{
+				var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+				str += ' (${percent}%) - ${ratingFC}';
+			}
+
+			var tempScore:String = 'Score: ${songScore}'
+			+ (!instakillOnMiss ? ' | Misses: ${songMisses}' : "")
+			+ ' | Rating: ${str}';
+			// "tempScore" variable is used to prevent another memory leak, just in case
+			// "\n" here prevents the text from being cut off by beat zooms
+			scoreTxt.text = '${tempScore}\n';
 		}
 
-		var tempScore:String = 'Score: ${songScore}'
-		+ (!instakillOnMiss ? ' | Misses: ${songMisses}' : "")
-		+ ' | Rating: ${str}';
-		// "tempScore" variable is used to prevent another memory leak, just in case
-		// "\n" here prevents the text from being cut off by beat zooms
-		scoreTxt.text = '${tempScore}\n';
-
-		if (!miss && !cpuControlled)
+		if (!miss && !cpuControlled && !KEmode)
 			doScoreBop();
 
 		callOnScripts('onUpdateScore', [miss]);
@@ -1504,7 +1565,7 @@ class PlayState extends MusicBeatState
 				else if(ClientPrefs.data.middleScroll) targetAlpha = 0.35;
 			}
 
-			var babyArrow:StrumNote = new StrumNote(strumLineX, strumLineY, i, player);
+			var babyArrow:StrumNote = new StrumNote(strumLineX - 10, strumLineY, i, player);
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
 			if (!isStoryMode && !skipArrowStartTween)
 			{
@@ -1653,6 +1714,25 @@ class PlayState extends MusicBeatState
 
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
+
+		// Kade Engine Mode NPS Counter
+		if (KEmode)
+		{
+			var balls = notesHitArray.length - 1;
+			while (balls >= 0)
+			{
+				var cock:Date = notesHitArray[balls];
+				if (cock != null && cock.getTime() + 1000 < Date.now().getTime())
+					notesHitArray.remove(cock);
+				else
+					balls = 0;
+				balls--;
+			}
+			nps = notesHitArray.length;
+			if (nps > maxNPS)
+				maxNPS = nps;
+			updateScore(false, true);
+		}
 
 		if(botplayTxt != null && botplayTxt.visible) {
 			botplaySine += 180 * elapsed;
@@ -1822,12 +1902,19 @@ class PlayState extends MusicBeatState
 	// Health icon updaters
 	public dynamic function updateIconsScale(elapsed:Float)
 	{
-		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * 9 * playbackRate));
-		iconP1.scale.set(mult, mult);
-		iconP1.updateHitbox();
+		if (KEmode) {
+			iconP1.setGraphicSize(Std.int(FlxMath.lerp(150, iconP1.width, 0.50)));
+			iconP2.setGraphicSize(Std.int(FlxMath.lerp(150, iconP2.width, 0.50)));
+		}
+		else {
+			var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * 9 * playbackRate));
+			iconP1.scale.set(mult, mult);
 
-		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * 9 * playbackRate));
-		iconP2.scale.set(mult, mult);
+			var mult:Float = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * 9 * playbackRate));
+			iconP2.scale.set(mult, mult);
+		}
+
+		iconP1.updateHitbox();
 		iconP2.updateHitbox();
 	}
 
@@ -2463,13 +2550,25 @@ class PlayState extends MusicBeatState
 		//tryna do MS based judgment due to popular demand
 		var daRating:Rating = Conductor.judgeNote(ratingsData, noteDiff / playbackRate);
 
+		switch (daRating.name)
+		{
+			case 'shit':
+				shits++;
+			case 'bad':
+				bads++;
+			case 'good':
+				goods++;
+			case 'sick':
+				sicks++;
+		}
+
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
 		if(!note.ratingDisabled) daRating.hits++;
 		note.rating = daRating.name;
 		score = daRating.score;
 
-		if(daRating.noteSplash && !note.noteSplashData.disabled)
+		if(daRating.noteSplash && !note.noteSplashData.disabled && !KEmode)
 			spawnNoteSplashOnNote(note);
 
 		if(!practiceMode && !cpuControlled) {
@@ -2506,6 +2605,8 @@ class PlayState extends MusicBeatState
 		rating.antialiasing = antialias;
 
 		if (KEmode) {
+			songScoreDef += Math.round(noteDiff);
+
 			if (currentTimingShown != null)
 				remove(currentTimingShown);
 
@@ -3044,6 +3145,11 @@ class PlayState extends MusicBeatState
 
 		if (!note.isSustainNote)
 		{
+			if (KEmode)
+			{
+				notesHitArray.unshift(Date.now());
+			}
+
 			combo++;
 			if(combo > 9999) combo = 9999;
 			popUpScore(note);
@@ -3149,8 +3255,14 @@ class PlayState extends MusicBeatState
 		if (generatedMusic)
 			notes.sort(FlxSort.byY, ClientPrefs.data.downScroll ? FlxSort.ASCENDING : FlxSort.DESCENDING);
 
-		iconP1.scale.set(1.2, 1.2);
-		iconP2.scale.set(1.2, 1.2);
+		if (KEmode) {
+			iconP1.setGraphicSize(Std.int(iconP1.width + 30));
+			iconP2.setGraphicSize(Std.int(iconP2.width + 30));
+		}
+		else {
+			iconP1.scale.set(1.2, 1.2);
+			iconP2.scale.set(1.2, 1.2);
+		}
 
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
@@ -3441,6 +3553,9 @@ class PlayState extends MusicBeatState
 		var spr:StrumNote = null;
 		if(isDad) {
 			spr = opponentStrums.members[id];
+
+			if (KEmode)
+				return;
 		} else {
 			spr = playerStrums.members[id];
 		}
