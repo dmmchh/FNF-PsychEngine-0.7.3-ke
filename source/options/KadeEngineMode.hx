@@ -12,5 +12,7 @@ class KadeEngineMode extends BaseOptionsMenu
         'kadeEngineMode', //Save data variable name
         'bool'); //Variable type
         addOption(option);
+
+        super();
     }
 }
