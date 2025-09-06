@@ -26,7 +26,7 @@ class OptionsState extends MusicBeatState
 			case 'Adjust Delay and Combo':
 				MusicBeatState.switchState(new options.NoteOffsetState());
 			case 'Kade Engine Mode':
-				openSubState(new options.NotesSubState());
+				openSubState(new options.KadeEngineMode());
 		}
 	}
 
