@@ -264,6 +264,12 @@ class PlayState extends MusicBeatState
 	public var startCallback:Void->Void = null;
 	public var endCallback:Void->Void = null;
 
+	// Kade Engine Mode
+	public var KEmode:Bool;
+
+	public var currentTimingShown:FlxText = null;
+	public var timeShown = 0;
+
 	override public function create()
 	{
 		//trace('Playback Rate: ' + playbackRate);
@@ -295,6 +301,9 @@ class PlayState extends MusicBeatState
 		practiceMode = ClientPrefs.getGameplaySetting('practice');
 		cpuControlled = ClientPrefs.getGameplaySetting('botplay');
 		guitarHeroSustains = ClientPrefs.data.guitarHeroSustains;
+
+		// Kade Engine Mode
+		KEmode = ClientPrefs.data.kadeEngineMode;
 
 		// var gameCam:FlxCamera = FlxG.camera;
 		camGame = initPsychCamera();
@@ -2496,6 +2505,36 @@ class PlayState extends MusicBeatState
 		rating.y -= ClientPrefs.data.comboOffset[1];
 		rating.antialiasing = antialias;
 
+		if (KEmode) {
+			if (currentTimingShown != null)
+				remove(currentTimingShown);
+
+			currentTimingShown = new FlxText(0, 0, 0, "0ms");
+			timeShown = 0;
+			/*switch (daRating)
+			{
+				case 'shit' | 'bad':
+					currentTimingShown.color = FlxColor.RED;
+				case 'good':
+					currentTimingShown.color = FlxColor.GREEN;
+				case 'sick':
+					currentTimingShown.color = FlxColor.CYAN;
+			}      考虑添加*/
+			currentTimingShown.color = FlxColor.CYAN;
+			
+			currentTimingShown.borderStyle = OUTLINE;
+			currentTimingShown.borderSize = 1;
+			currentTimingShown.borderColor = FlxColor.BLACK;
+			currentTimingShown.text = Std.int(noteDiff) + "ms";
+			currentTimingShown.size = 20;
+
+			if (currentTimingShown.alpha != 1)
+				currentTimingShown.alpha = 1;
+
+			if (!ClientPrefs.getGameplaySetting('botplay'))
+				add(currentTimingShown);
+		}
+
 		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
 		comboSpr.screenCenter();
 		comboSpr.x = placement;
@@ -2508,6 +2547,19 @@ class PlayState extends MusicBeatState
 		comboSpr.y += 60;
 		comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 		comboGroup.add(rating);
+
+		if (KEmode) {
+			currentTimingShown.screenCenter();
+			currentTimingShown.x = comboSpr.x + 100;
+			currentTimingShown.y = rating.y + 100;
+			currentTimingShown.acceleration.y = 600;
+			currentTimingShown.velocity.y -= 150;
+
+			currentTimingShown.velocity.x += comboSpr.velocity.x;
+
+			currentTimingShown.updateHitbox();
+			currentTimingShown.cameras = [camHUD];
+		}
 
 		if (!PlayState.isPixelStage)
 		{
@@ -2571,7 +2623,13 @@ class PlayState extends MusicBeatState
 		}
 		comboSpr.x = xThing + 50;
 		FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
-			startDelay: Conductor.crochet * 0.001 / playbackRate
+			startDelay: Conductor.crochet * 0.001 / playbackRate,
+			onUpdate: function(tween:FlxTween)
+			{
+				if (currentTimingShown != null)
+					currentTimingShown.alpha -= 0.02;
+				timeShown++;
+			}
 		});
 
 		FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
@@ -2579,6 +2637,12 @@ class PlayState extends MusicBeatState
 			{
 				comboSpr.destroy();
 				rating.destroy();
+
+				if (currentTimingShown != null && timeShown >= 20)
+				{
+					remove(currentTimingShown);
+					currentTimingShown = null;
+				}
 			},
 			startDelay: Conductor.crochet * 0.002 / playbackRate
 		});
