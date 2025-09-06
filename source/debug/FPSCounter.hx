@@ -61,6 +61,8 @@ class FPSCounter extends TextField
 		deltaTimeout += deltaTime;
 	}
 
+	// 目前更改了FPS显示，后续增加彩色FPS选项
+
 	public dynamic function updateText():Void { // so people can override it in hscript
 		text = 'FPS: ${currentFPS}';
 		// + '\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
