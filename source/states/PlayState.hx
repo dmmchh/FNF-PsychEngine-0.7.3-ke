@@ -1898,7 +1898,7 @@ class PlayState extends MusicBeatState
 
 							if(daNote.mustPress)
 							{
-								if(cpuControlled && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
+								if(cpuControlled && !loadRep && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
 									goodNoteHit(daNote);
 								}
 							}
@@ -2647,8 +2647,8 @@ class PlayState extends MusicBeatState
 		if(!note.ratingDisabled) daRating.hits++;
 		if (KEmode && loadRep)
 		{
-			noteDiff = findByTime(note.strumTime)[3];
-			note.rating = rep.replay.songJudgements[findByTimeIndex(note.strumTime)];
+			//noteDiff = findByTime(note.strumTime)[3];
+			//note.rating = rep.replay.songJudgements[findByTimeIndex(note.strumTime)];
 		}
 		else
 			note.rating = daRating.name;
