@@ -271,6 +271,10 @@ class PlayState extends MusicBeatState
 	public static var rep:Replay;
 	public static var loadRep:Bool = false;
 
+	public static var repPresses:Int = 0;
+	public static var repReleases:Int = 0;
+	var replayTxt:FlxText;
+
 	private var saveNotes:Array<Dynamic> = [];
 	private var saveJudge:Array<String> = [];
 	private var replayAna:Analysis = new Analysis(); // replay analysis
@@ -335,6 +339,20 @@ class PlayState extends MusicBeatState
 				bads = 0;
 				shits = 0;
 				goods = 0;
+			}
+
+			repPresses = 0;
+			repReleases = 0;
+
+			if (loadRep)
+			{
+				FlxG.watch.addQuick('rep presses', repPresses);
+				FlxG.watch.addQuick('rep releases', repReleases);
+				// FlxG.watch.addQuick('Queued',inputsQueued);
+	
+				ClientPrefs.data.downScroll = rep.replay.isDownscroll;
+				ClientPrefs.data.safeFrames = rep.replay.sf;
+				cpuControlled = true;
 			}
 		}
 
@@ -623,9 +641,23 @@ class PlayState extends MusicBeatState
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
-		uiGroup.add(botplayTxt);
+		if (!loadRep)
+		{
+			uiGroup.add(botplayTxt);
+		}
 		if(ClientPrefs.data.downScroll)
 			botplayTxt.y = timeBar.y - 78;
+
+		replayTxt = new FlxText(healthBar.x + healthBar.width / 2 - 75, healthBar.y + (ClientPrefs.data.downScroll ? 100 : -100), 0, "REPLAY",
+			20);
+		replayTxt.setFormat(Paths.font("vcr.ttf"), 42, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		replayTxt.borderSize = 4;
+		replayTxt.borderQuality = 2;
+		replayTxt.scrollFactor.set();
+		if (loadRep)
+		{
+			uiGroup.add(replayTxt);
+		}
 
 		uiGroup.cameras = [camHUD];
 		noteGroup.cameras = [camHUD];
@@ -1846,7 +1878,7 @@ class PlayState extends MusicBeatState
 			{
 				var anas:Array<Ana> = [null, null, null, null];
 
-				if(!cpuControlled)
+				if(!cpuControlled || loadRep && KEmode)
 					keysCheck();
 				else
 					playerDance();
@@ -1866,8 +1898,9 @@ class PlayState extends MusicBeatState
 
 							if(daNote.mustPress)
 							{
-								if(cpuControlled && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition))
+								if(cpuControlled && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
 									goodNoteHit(daNote);
+								}
 							}
 							else if (daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
 								opponentNoteHit(daNote);
@@ -1883,8 +1916,6 @@ class PlayState extends MusicBeatState
 								daNote.active = daNote.visible = false;
 								invalidateNote(daNote);
 							}
-
-
 						});
 					}
 					else
@@ -2435,6 +2466,9 @@ class PlayState extends MusicBeatState
 
 		if (KEmode && !loadRep && ClientPrefs.data.scoreScreen)
 			rep.SaveReplay(saveNotes, saveJudge, replayAna);
+		else {
+			cpuControlled = false;
+		}
 
 
 		#if ACHIEVEMENTS_ALLOWED
@@ -2611,7 +2645,13 @@ class PlayState extends MusicBeatState
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
 		if(!note.ratingDisabled) daRating.hits++;
-		note.rating = daRating.name;
+		if (KEmode && loadRep)
+		{
+			noteDiff = findByTime(note.strumTime)[3];
+			note.rating = rep.replay.songJudgements[findByTimeIndex(note.strumTime)];
+		}
+		else
+			note.rating = daRating.name;
 		score = daRating.score;
 
 		if(daRating.noteSplash && !note.noteSplashData.disabled && !KEmode)
@@ -2678,7 +2718,7 @@ class PlayState extends MusicBeatState
 			if (currentTimingShown.alpha != 1)
 				currentTimingShown.alpha = 1;
 
-			if (!ClientPrefs.getGameplaySetting('botplay'))
+			if (!ClientPrefs.getGameplaySetting('botplay') || loadRep && KEmode)
 				add(currentTimingShown);
 		}
 
@@ -2850,8 +2890,20 @@ class PlayState extends MusicBeatState
 					}
 				}
 			}
-			goodNoteHit(funnyNote);
-			//trace("press");
+			if (KEmode && loadRep)
+			{
+				// trace('ReplayNote ' + tmpRepNote.strumtime + ' | ' + tmpRepNote.direction);
+				var n = findByTime(funnyNote.strumTime);
+				trace(n);
+				if (n != null)
+				{
+					goodNoteHit(funnyNote);
+				}
+			}
+			else {
+				goodNoteHit(funnyNote);
+				trace("press");
+			}
 		}
 		else if(shouldMiss)
 		{
@@ -2873,6 +2925,28 @@ class PlayState extends MusicBeatState
 			spr.resetAnim = 0;
 		}
 		callOnScripts('onKeyPress', [key]);
+	}
+
+	public function findByTime(time:Float):Array<Dynamic>
+	{
+		for (i in rep.replay.songNotes)
+		{
+			// trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
+			if (i[0] == time)
+				return i;
+		}
+		return null;
+	}
+
+	public function findByTimeIndex(time:Float):Int
+	{
+		for (i in 0...rep.replay.songNotes.length)
+		{
+			// trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
+			if (rep.replay.songNotes[i][0] == time)
+				return i;
+		}
+		return -1;
 	}
 
 	public static function sortHitNotes(a:Note, b:Note):Int
@@ -2970,9 +3044,11 @@ class PlayState extends MusicBeatState
 					if (guitarHeroSustains)
 						canHit = canHit && n.parent != null && n.parent.wasGoodHit;
 
-					if (canHit && n.isSustainNote) {
+					if (KEmode && loadRep && n != null && canHit && n.isSustainNote && holdArray[n.noteData]) {
+						goodNoteHit(n);
+					}
+					else if (canHit && n.isSustainNote) {
 						var released:Bool = !holdArray[n.noteData];
-
 						if (!released)
 							goodNoteHit(n);
 					}

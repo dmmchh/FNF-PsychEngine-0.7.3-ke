@@ -86,7 +86,7 @@ class ResultsScreen extends FlxSubState
             text.text = "Week Cleared!";
         }
 
-        comboText = new FlxText(20,-75,0,'Judgements:\nSicks - ${PlayState.sicks}\nGoods - ${PlayState.goods}\nBads - ${PlayState.bads}\n\nCombo Breaks: ${(PlayState.isStoryMode ? PlayState.campaignMisses : PlayState.instance.songMisses)}\nHighest Combo: ${PlayState.instance.highestCombo + 1}\n\nScore: ${PlayState.instance.songScore}\nAccuracy: ${CoolUtil.floorDecimal(PlayState.instance.ratingPercent * 100, 2)}%\n\n${Rating.GenerateLetterRank(PlayState.instance.ratingPercent)}\n\nF1 - View replay\nF2 - Replay song
+        comboText = new FlxText(20,-75,0,'Judgements:\nSicks - ${PlayState.sicks}\nGoods - ${PlayState.goods}\nBads - ${PlayState.bads}\n\nCombo Breaks: ${(PlayState.isStoryMode ? PlayState.campaignMisses : PlayState.instance.songMisses)}\nHighest Combo: ${PlayState.instance.highestCombo + 1}\n\nScore: ${PlayState.instance.songScore}\nAccuracy: ${CoolUtil.floorDecimal(PlayState.instance.ratingPercent * 100, 2)}%\n\n${Rating.GenerateLetterRank(PlayState.instance.ratingPercent * 100)}\n\nF1 - View replay\nF2 - Replay song
         ');
         comboText.size = 28;
         comboText.setBorderStyle(FlxTextBorderStyle.OUTLINE,FlxColor.BLACK,4,1);
@@ -207,7 +207,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent * 100),PlayState.storyDifficulty);
 			#end
 
             if (PlayState.isStoryMode)
@@ -248,7 +248,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent * 100),PlayState.storyDifficulty);
 			#end
 
             var poop:String = Highscore.formatSong(songFormat, PlayState.rep.replay.songDiff);
@@ -256,7 +256,7 @@ class ResultsScreen extends FlxSubState
             music.fadeOut(0.3);
 
             try {
-                PlayState.SONG = Song.loadFromJson(poop, PlayState.rep.replay.songName);
+                PlayState.SONG = Song.loadFromJson(poop, PlayState.SONG.song);
                 PlayState.isStoryMode = false;
                 PlayState.storyDifficulty = PlayState.rep.replay.songDiff;
                 PlayState.storyWeek = 0;
@@ -287,7 +287,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent * 100),PlayState.storyDifficulty);
 			#end
 
             var songFormat = StringTools.replace(PlayState.SONG.song, " ", "-");
