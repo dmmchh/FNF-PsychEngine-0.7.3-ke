@@ -2982,7 +2982,7 @@ class PlayState extends MusicBeatState
 			if (KEmode && !loadRep && ClientPrefs.data.scoreScreen)
 				for (i in anas)
 					if (i != null) {
-						//replayAna.anaArray.push(i); // put em all there
+						replayAna.anaArray.push(i); // put em all there
 					}
 
 			if (!holdArray.contains(true) || endingSong)

@@ -257,7 +257,6 @@ class ResultsScreen extends FlxSubState
 
             try {
                 PlayState.SONG = Song.loadFromJson(poop, PlayState.rep.replay.songName);
-                trace(poop, PlayState.rep.replay.songName);
                 PlayState.isStoryMode = false;
                 PlayState.storyDifficulty = PlayState.rep.replay.songDiff;
                 PlayState.storyWeek = 0;
@@ -269,6 +268,7 @@ class ResultsScreen extends FlxSubState
                 PlayState.rep = null;
                 PlayState.loadRep = false;
 
+                FlxG.sound.playMusic(Paths.music('freakyMenu'));
                 MusicBeatState.switchState(new FreeplayState());
             }
         }
