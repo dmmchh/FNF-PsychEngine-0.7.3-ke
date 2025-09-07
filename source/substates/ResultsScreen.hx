@@ -86,7 +86,7 @@ class ResultsScreen extends FlxSubState
             text.text = "Week Cleared!";
         }
 
-        comboText = new FlxText(20,-75,0,'Judgements:\nSicks - ${PlayState.sicks}\nGoods - ${PlayState.goods}\nBads - ${PlayState.bads}\n\nCombo Breaks: ${(PlayState.isStoryMode ? PlayState.campaignMisses : PlayState.instance.songMisses)}\nHighest Combo: ${PlayState.instance.highestCombo + 1}\n\nScore: ${PlayState.instance.songScore}\nAccuracy: ${CoolUtil.floorDecimal(PlayState.instance.ratingPercent, 2)}%\n\n${Rating.GenerateLetterRank(PlayState.instance.ratingPercent)}\n\nF1 - View replay\nF2 - Replay song
+        comboText = new FlxText(20,-75,0,'Judgements:\nSicks - ${PlayState.sicks}\nGoods - ${PlayState.goods}\nBads - ${PlayState.bads}\n\nCombo Breaks: ${(PlayState.isStoryMode ? PlayState.campaignMisses : PlayState.instance.songMisses)}\nHighest Combo: ${PlayState.instance.highestCombo + 1}\n\nScore: ${PlayState.instance.songScore}\nAccuracy: ${CoolUtil.floorDecimal(PlayState.instance.ratingPercent * 100, 2)}%\n\n${Rating.GenerateLetterRank(PlayState.instance.ratingPercent)}\n\nF1 - View replay\nF2 - Replay song
         ');
         comboText.size = 28;
         comboText.setBorderStyle(FlxTextBorderStyle.OUTLINE,FlxColor.BLACK,4,1);
@@ -96,7 +96,7 @@ class ResultsScreen extends FlxSubState
 
         // 未来修复 ${ControlsSubState.instance.onKeyboardMode ? 'A' : 'ENTER'}
 
-        contText = new FlxText(FlxG.width - 475,FlxG.height + 50,0,'Press ENTER to continue.');
+        contText = new FlxText(FlxG.width - 475,FlxG.height + 50,0,'Press ${Controls.instance.controllerMode ? 'A' : 'ENTER'} to continue.');
         contText.size = 28;
         contText.setBorderStyle(FlxTextBorderStyle.OUTLINE,FlxColor.BLACK,4,1);
         contText.color = FlxColor.WHITE;
@@ -139,14 +139,16 @@ class ResultsScreen extends FlxSubState
             var obj = PlayState.rep.replay.songNotes[i];
             // judgement
             var obj2 = PlayState.rep.replay.songJudgements[i];
+            //trace(obj, obj2);
 
             var obj3 = obj[0];
 
             var diff = obj[3];
             var judge = obj2;
             mean += diff;
-            if (obj[1] != -1)
+            if (obj[1] != -1) {
                 graph.addToHistory(diff, judge, obj3);
+            }
         }
 
         graph.update();
@@ -211,10 +213,10 @@ class ResultsScreen extends FlxSubState
             if (PlayState.isStoryMode)
             {
                 FlxG.sound.playMusic(Paths.music('freakyMenu'));
-                FlxG.switchState(new MainMenuState());
+                MusicBeatState.switchState(new MainMenuState());
             }
             else
-                FlxG.switchState(new FreeplayState());
+                MusicBeatState.switchState(new FreeplayState());
         }
 
         if (FlxG.keys.justPressed.EIGHT)
@@ -225,7 +227,6 @@ class ResultsScreen extends FlxSubState
 
         if (FlxG.keys.justPressed.F1)
         {
-            trace(PlayState.rep.path);
             PlayState.rep = Replay.LoadReplay(PlayState.rep.path);
 
             PlayState.loadRep = true;
@@ -254,14 +255,25 @@ class ResultsScreen extends FlxSubState
 
             music.fadeOut(0.3);
 
-            PlayState.SONG = Song.loadFromJson(poop, PlayState.rep.replay.songName);
-            PlayState.isStoryMode = false;
-            PlayState.storyDifficulty = PlayState.rep.replay.songDiff;
-            PlayState.storyWeek = 0;
-            LoadingState.loadAndSwitchState(new PlayState());
+            try {
+                PlayState.SONG = Song.loadFromJson(poop, PlayState.rep.replay.songName);
+                trace(poop, PlayState.rep.replay.songName);
+                PlayState.isStoryMode = false;
+                PlayState.storyDifficulty = PlayState.rep.replay.songDiff;
+                PlayState.storyWeek = 0;
+                LoadingState.loadAndSwitchState(new PlayState());
+            }
+            catch (e:Dynamic)
+            {
+                trace("Failed to load replay song, does the song exist? Error: " + e);
+                PlayState.rep = null;
+                PlayState.loadRep = false;
+
+                MusicBeatState.switchState(new FreeplayState());
+            }
         }
 
-        if (FlxG.keys.justPressed.F2 )
+        if (FlxG.keys.justPressed.F2)
         {
             PlayState.rep = null;
 

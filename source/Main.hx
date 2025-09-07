@@ -123,8 +123,9 @@ class Main extends Sprite
 		Lib.current.stage.window.setIcon(icon);
 		#end
 
-		#if html5
 		FlxG.autoPause = false;
+
+		#if html5
 		FlxG.mouse.visible = false;
 		#end
 		

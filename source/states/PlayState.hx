@@ -695,7 +695,7 @@ class PlayState extends MusicBeatState
 		cacheCountdown();
 		cachePopUpScore();
 
-		if (KEmode && !loadRep)
+		if (KEmode && !loadRep && ClientPrefs.data.scoreScreen)
 			rep = new Replay("na");
 
 		super.create();
@@ -2433,7 +2433,7 @@ class PlayState extends MusicBeatState
 		seenCutscene = false;
 
 
-		if (KEmode && !loadRep)
+		if (KEmode && !loadRep && ClientPrefs.data.scoreScreen)
 			rep.SaveReplay(saveNotes, saveJudge, replayAna);
 
 
@@ -2506,7 +2506,7 @@ class PlayState extends MusicBeatState
 				Mods.loadTopMod();
 				#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
 
-				if (ClientPrefs.data.scoreScreen)
+				if (KEmode && ClientPrefs.data.scoreScreen)
 				{
 					openSubState(new ResultsScreen());
 				}
@@ -2604,6 +2604,8 @@ class PlayState extends MusicBeatState
 					sicks++;
 					if (gainHealth) health += note.hitHealth * healthGain;
 			}
+
+			saveJudge.push(daRating.name);
 		}
 
 		totalNotesHit += daRating.ratingMod;
@@ -2849,6 +2851,7 @@ class PlayState extends MusicBeatState
 				}
 			}
 			goodNoteHit(funnyNote);
+			//trace("press");
 		}
 		else if(shouldMiss)
 		{
@@ -2935,21 +2938,27 @@ class PlayState extends MusicBeatState
 				pressArray.push(controls.justPressed(key));
 				releaseArray.push(controls.justReleased(key));
 			}
+			else if(KEmode)
+			{
+				pressArray.push(controls.justPressed(key));
+			}
 		}
+
+		var anas:Array<Ana> = [null, null, null, null];
 
 		// TO DO: Find a better way to handle controller inputs, this should work for now
 		if(controls.controllerMode && pressArray.contains(true))
 			for (i in 0...pressArray.length)
-				if(pressArray[i] && strumsBlocked[i] != true)
+				if(pressArray[i] && strumsBlocked[i] != true) {
 					keyPressed(i);
-
-		var anas:Array<Ana> = [null, null, null, null];
-
-		if (KEmode) {
+				}
+		
+		if(KEmode) {
 			for (i in 0...pressArray.length)
-				if (pressArray[i])
+				if(pressArray[i] && strumsBlocked[i] != true) {
 					anas[i] = new Ana(Conductor.songPosition, null, false, "miss", i);
-		}
+				}
+			}
 
 		if (startedCountdown && !inCutscene && !boyfriend.stunned && generatedMusic)
 		{
@@ -2970,11 +2979,10 @@ class PlayState extends MusicBeatState
 				}
 			}
 
-			if (KEmode && !loadRep)
+			if (KEmode && !loadRep && ClientPrefs.data.scoreScreen)
 				for (i in anas)
 					if (i != null) {
-						replayAna.anaArray.push(i); // put em all there
-						trace(i);
+						//replayAna.anaArray.push(i); // put em all there
 					}
 
 			if (!holdArray.contains(true) || endingSong)
@@ -3067,7 +3075,7 @@ class PlayState extends MusicBeatState
 		var lastCombo:Int = combo;
 		combo = 0;
 
-		if (KEmode) {
+		if (KEmode && ClientPrefs.data.scoreScreen) {
 			if (note != null)
 			{
 				if (!loadRep)
@@ -3237,7 +3245,7 @@ class PlayState extends MusicBeatState
 		else strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 		vocals.volume = 1;
 
-		if (KEmode && !loadRep && note.mustPress)
+		if (KEmode && !loadRep && note.mustPress && ClientPrefs.data.scoreScreen)
 		{
 			var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
 
@@ -3245,7 +3253,6 @@ class PlayState extends MusicBeatState
 			if (note.isSustainNote)
 				array[1] = -1;
 			saveNotes.push(array);
-			saveJudge.push(note.rating);
 		}
 
 		if (!note.isSustainNote)

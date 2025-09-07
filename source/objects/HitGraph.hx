@@ -129,7 +129,6 @@ class HitGraph extends Sprite
 
 	function drawJudgementLine(ms:Float):Void
 	{
-
 		var gfx:Graphics = graphics;
 
 		gfx.lineStyle(1, graphColor, 0.3);

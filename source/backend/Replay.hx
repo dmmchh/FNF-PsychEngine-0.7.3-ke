@@ -126,7 +126,7 @@ class Replay
 		trace('loading ' + Sys.getCwd() + 'assets/replays/' + path + ' replay...');
 		try
 		{
-			var repl:ReplayJSON = cast Json.parse(File.getContent(Sys.getCwd() + "assets/replays/" + path));
+			var repl:ReplayJSON = cast Json.parse(FileSave.getContent("replays/" + path));
 			replay = repl;
 		}
 		catch(e)
