@@ -81,6 +81,7 @@ import states.TitleState;
 
 	public var npsDisplay:Bool = true;
 	public var healthBarColor:Bool = false;
+	public var scoreScreen:Bool = true;
 }
 
 class ClientPrefs {

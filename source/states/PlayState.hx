@@ -31,6 +31,7 @@ import states.editors.CharacterEditorState;
 
 import substates.PauseSubState;
 import substates.GameOverSubstate;
+import substates.ResultsScreen;
 
 #if !flash
 import flixel.addons.display.FlxRuntimeShader;
@@ -267,9 +268,16 @@ class PlayState extends MusicBeatState
 	// Kade Engine Mode
 	public var KEmode:Bool;
 
+	public static var rep:Replay;
 	public static var loadRep:Bool = false;
+
+	private var saveNotes:Array<Dynamic> = [];
+	private var saveJudge:Array<String> = [];
+	private var replayAna:Analysis = new Analysis(); // replay analysis
+
 	public static var originalX:Float;
 
+	public var highestCombo:Int = 0;
 	public static var shits:Int = 0;
 	public static var bads:Int = 0;
 	public static var goods:Int = 0;
@@ -686,6 +694,9 @@ class PlayState extends MusicBeatState
 
 		cacheCountdown();
 		cachePopUpScore();
+
+		if (KEmode && !loadRep)
+			rep = new Replay("na");
 
 		super.create();
 		Paths.clearUnusedMemory();
@@ -1833,6 +1844,8 @@ class PlayState extends MusicBeatState
 		{
 			if(!inCutscene)
 			{
+				var anas:Array<Ana> = [null, null, null, null];
+
 				if(!cpuControlled)
 					keysCheck();
 				else
@@ -1870,6 +1883,8 @@ class PlayState extends MusicBeatState
 								daNote.active = daNote.visible = false;
 								invalidateNote(daNote);
 							}
+
+
 						});
 					}
 					else
@@ -2417,6 +2432,11 @@ class PlayState extends MusicBeatState
 		deathCounter = 0;
 		seenCutscene = false;
 
+
+		if (KEmode && !loadRep)
+			rep.SaveReplay(saveNotes, saveJudge, replayAna);
+
+
 		#if ACHIEVEMENTS_ALLOWED
 		var weekNoMiss:String = WeekData.getWeekFileName() + '_nomiss';
 		checkForAchievement([weekNoMiss, 'ur_bad', 'ur_good', 'hype', 'two_keys', 'toastie', 'debugger']);
@@ -2486,8 +2506,14 @@ class PlayState extends MusicBeatState
 				Mods.loadTopMod();
 				#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
 
-				MusicBeatState.switchState(new FreeplayState());
-				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				if (ClientPrefs.data.scoreScreen)
+				{
+					openSubState(new ResultsScreen());
+				}
+				else {
+					MusicBeatState.switchState(new FreeplayState());
+					FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				}
 				changedDifficulty = false;
 			}
 			transitioning = true;
@@ -2917,6 +2943,14 @@ class PlayState extends MusicBeatState
 				if(pressArray[i] && strumsBlocked[i] != true)
 					keyPressed(i);
 
+		var anas:Array<Ana> = [null, null, null, null];
+
+		if (KEmode) {
+			for (i in 0...pressArray.length)
+				if (pressArray[i])
+					anas[i] = new Ana(Conductor.songPosition, null, false, "miss", i);
+		}
+
 		if (startedCountdown && !inCutscene && !boyfriend.stunned && generatedMusic)
 		{
 			if (notes.length > 0) {
@@ -2935,6 +2969,13 @@ class PlayState extends MusicBeatState
 					}
 				}
 			}
+
+			if (KEmode && !loadRep)
+				for (i in anas)
+					if (i != null) {
+						replayAna.anaArray.push(i); // put em all there
+						trace(i);
+					}
 
 			if (!holdArray.contains(true) || endingSong)
 				playerDance();
@@ -3027,6 +3068,30 @@ class PlayState extends MusicBeatState
 		combo = 0;
 
 		if (KEmode) {
+			if (note != null)
+			{
+				if (!loadRep)
+				{
+					saveNotes.push([
+						note.strumTime,
+						0,
+						direction,
+						166 * Math.floor((PlayState.rep.replay.sf / 60) * 1000) / 166
+					]);
+					saveJudge.push("miss");
+				}
+			}
+			else if (!loadRep)
+			{
+				saveNotes.push([
+					Conductor.songPosition,
+					0,
+					direction,
+					166 * Math.floor((PlayState.rep.replay.sf / 60) * 1000) / 166
+				]);
+				saveJudge.push("miss");
+			}
+
 			if (note != null) {
 				if (!note.isSustainNote)
 					health -= subtract * healthLoss;
@@ -3172,16 +3237,30 @@ class PlayState extends MusicBeatState
 		else strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 		vocals.volume = 1;
 
+		if (KEmode && !loadRep && note.mustPress)
+		{
+			var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
+
+			var array = [note.strumTime, note.sustainLength, note.noteData, noteDiff];
+			if (note.isSustainNote)
+				array[1] = -1;
+			saveNotes.push(array);
+			saveJudge.push(note.rating);
+		}
+
 		if (!note.isSustainNote)
 		{
-			if (KEmode)
-			{
-				notesHitArray.unshift(Date.now());
-			}
-
 			combo++;
 			if(combo > 9999) combo = 9999;
 			popUpScore(note);
+
+			if (KEmode)
+			{
+				notesHitArray.unshift(Date.now());
+
+				if (combo > highestCombo)
+					highestCombo = combo;
+			}
 		}
 
 		if (!KEmode) {

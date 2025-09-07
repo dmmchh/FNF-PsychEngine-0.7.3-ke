@@ -58,5 +58,10 @@ import flixel.tweens.FlxTween;
 import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
+// Kade Engine Mode
+import backend.Replay;
+import backend.Replay.Ana;
+import backend.Replay.Analysis;
+
 using StringTools;
 #end

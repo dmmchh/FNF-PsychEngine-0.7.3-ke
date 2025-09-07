@@ -31,6 +31,12 @@ import flixel.input.FlxKeyManager;
 import objects.OFLSprite;
 import objects.HitGraph;
 import backend.Rating;
+import backend.HelperFunctions;
+import backend.Highscore;
+import backend.Song;
+
+import states.MainMenuState;
+import states.FreeplayState;
 
 using StringTools;
 
@@ -88,9 +94,9 @@ class ResultsScreen extends FlxSubState
         comboText.scrollFactor.set();
         add(comboText);
 
-        // 未来修复
+        // 未来修复 ${ControlsSubState.instance.onKeyboardMode ? 'A' : 'ENTER'}
 
-        contText = new FlxText(FlxG.width - 475,FlxG.height + 50,0,'Press ${ControlsSubState.instance.onKeyboardMode ? 'A' : 'ENTER'} to continue.');
+        contText = new FlxText(FlxG.width - 475,FlxG.height + 50,0,'Press ENTER to continue.');
         contText.size = 28;
         contText.setBorderStyle(FlxTextBorderStyle.OUTLINE,FlxColor.BLACK,4,1);
         contText.color = FlxColor.WHITE;
@@ -184,7 +190,7 @@ class ResultsScreen extends FlxSubState
 
         // keybinds
 
-        if (PlayerSettings.player1.controls.ACCEPT)
+        if (Controls.instance.ACCEPT)
         {
             music.fadeOut(0.3);
             
@@ -199,7 +205,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Ratings.GenerateLetterRank(PlayState.instance.accuracy),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
 			#end
 
             if (PlayState.isStoryMode)
@@ -241,7 +247,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Ratings.GenerateLetterRank(PlayState.instance.accuracy),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
 			#end
 
             var poop:String = Highscore.formatSong(songFormat, PlayState.rep.replay.songDiff);
@@ -269,7 +275,7 @@ class ResultsScreen extends FlxSubState
 
 			#if !switch
 			Highscore.saveScore(songHighscore, Math.round(PlayState.instance.songScore), PlayState.storyDifficulty);
-			Highscore.saveCombo(songHighscore, Ratings.GenerateLetterRank(PlayState.instance.accuracy),PlayState.storyDifficulty);
+			Highscore.saveCombo(songHighscore, Rating.GenerateLetterRank(PlayState.instance.ratingPercent),PlayState.storyDifficulty);
 			#end
 
             var songFormat = StringTools.replace(PlayState.SONG.song, " ", "-");

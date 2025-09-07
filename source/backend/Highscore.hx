@@ -5,6 +5,7 @@ class Highscore
 	public static var weekScores:Map<String, Int> = new Map();
 	public static var songScores:Map<String, Int> = new Map<String, Int>();
 	public static var songRating:Map<String, Float> = new Map<String, Float>();
+	public static var songCombos:Map<String, String> = new Map<String, String>();
 
 	public static function resetSong(song:String, diff:Int = 0):Void
 	{
@@ -32,6 +33,23 @@ class Highscore
 		else {
 			setScore(daSong, score);
 			if(rating >= 0) setRating(daSong, rating);
+		}
+	}
+
+	public static function saveCombo(song:String, combo:String, ?diff:Int = 0):Void
+	{
+		var daSong:String = formatSong(song, diff);
+		var finalCombo:String = combo.split(')')[0].replace('(', '');
+
+		if(!FlxG.save.data.botplay)
+		{
+			if (songCombos.exists(daSong))
+			{
+				if (getComboInt(songCombos.get(daSong)) < getComboInt(finalCombo))
+					setCombo(daSong, finalCombo);
+			}
+			else
+				setCombo(daSong, finalCombo);
 		}
 	}
 
@@ -74,9 +92,34 @@ class Highscore
 		FlxG.save.flush();
 	}
 
+	static function setCombo(song:String, combo:String):Void
+	{
+		// Reminder that I don't need to format this song, it should come formatted!
+		songCombos.set(song, combo);
+		FlxG.save.data.songCombos = songCombos;
+		FlxG.save.flush();
+	}
+
 	public static function formatSong(song:String, diff:Int):String
 	{
 		return Paths.formatToSongPath(song) + Difficulty.getFilePath(diff);
+	}
+
+	static function getComboInt(combo:String):Int
+	{
+		switch(combo)
+		{
+			case 'SDCB':
+				return 1;
+			case 'FC':
+				return 2;
+			case 'GFC':
+				return 3;
+			case 'MFC':
+				return 4;
+			default:
+				return 0;
+		}
 	}
 
 	public static function getScore(song:String, diff:Int):Int

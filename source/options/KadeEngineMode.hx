@@ -32,6 +32,13 @@ class KadeEngineMode extends BaseOptionsMenu
         addOption(option);
         kadeArray.push(option);
 
+        var option:Option = new Option('ScoreScreen KE', //Name
+        'If checked, FreePlay SongEnd is done', //Description
+        'scoreScreen', //Save data variable name
+        'bool'); //Variable type
+        addOption(option);
+        kadeArray.push(option);
+
         /*if (!ClientPrefs.data.kadeEngineMode)
         {
             for (i in 0...kadeArray.length)

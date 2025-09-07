@@ -59,10 +59,15 @@ class ControlsSubState extends MusicBeatSubstate
 	var onKeyboardMode:Bool = true;
 	
 	var controllerSpr:FlxSprite;
+
+	// Kade Engine Mode
+	public static var instance:ControlsSubState;
 	
 	public function new()
 	{
 		super();
+
+		instance = this;
 
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Controls Menu", null);
