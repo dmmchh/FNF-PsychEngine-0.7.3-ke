@@ -1929,7 +1929,7 @@ class PlayState extends MusicBeatState
 									goodNoteHit(daNote);
 								}
 								else if (cpuControlled && loadRep && KEmode && daNote.canBeHit || cpuControlled && loadRep && KEmode && daNote.tooLate) {
-									if (findByTime(daNote.strumTime) != null)
+									if (findByTime(daNote.strumTime) != null && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition))
 									{
 										goodNoteHit(daNote);
 										//trace(daNote.strumTime + (Conductor.songPosition - daNote.strumTime));
