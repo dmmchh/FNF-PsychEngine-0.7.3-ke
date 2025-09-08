@@ -1928,9 +1928,12 @@ class PlayState extends MusicBeatState
 								if(cpuControlled && !loadRep && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
 									goodNoteHit(daNote);
 								}
-								else if (cpuControlled && loadRep && KEmode && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
-									keyPressed(daNote.noteData);
-									//trace(daNote.strumTime, Conductor.songPosition);
+								else if (cpuControlled && loadRep && KEmode && daNote.canBeHit || cpuControlled && loadRep && KEmode && daNote.tooLate) {
+									if (findByTime(daNote.strumTime) != null)
+									{
+										goodNoteHit(daNote);
+										//trace(daNote.strumTime + (Conductor.songPosition - daNote.strumTime));
+									}
 								}
 							}
 							else if (daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
@@ -2650,25 +2653,27 @@ class PlayState extends MusicBeatState
 		if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
 
 		if (KEmode) {
-			switch (daRating.name)
-			{
-				case 'shit':
-					shits++;
+			if (!loadRep) {
+				switch (daRating.name)
+				{
+					case 'shit':
+						shits++;
 
-					songScore -= 300;
-					combo = 0;
-					songMisses++;
-					health -= (note.missHealth - 0.04) * healthLoss;
-				case 'bad':
-					bads++;
+						songScore -= 300;
+						combo = 0;
+						songMisses++;
+						health -= (note.missHealth - 0.04) * healthLoss;
+					case 'bad':
+						bads++;
 
-					health -= (note.missHealth - 0.08) * healthLoss;
-				case 'good':
-					goods++;
-				case 'sick':
-					sicks++;
-					if (gainHealth) health += note.hitHealth * healthGain;
-			}
+						health -= (note.missHealth - 0.08) * healthLoss;
+					case 'good':
+						goods++;
+					case 'sick':
+						sicks++;
+						if (gainHealth) health += note.hitHealth * healthGain;
+				}
+		}
 
 			if (ClientPrefs.data.scoreScreen) {
 				saveJudge.push(daRating.name);
@@ -2974,9 +2979,11 @@ class PlayState extends MusicBeatState
 	{
 		for (i in 0...rep.replay.songNotes.length)
 		{
-			// trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
-			if (rep.replay.songNotes[i][0] == time)
+			//trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
+			if (rep.replay.songNotes[i][0] == time) {
+				//trace(time, i);
 				return i;
+			}
 		}
 		return -1;
 	}
