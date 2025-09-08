@@ -1213,9 +1213,26 @@ class PlayState extends MusicBeatState
 	// cool right? -Crow
 	public dynamic function updateScore(miss:Bool = false, npsB:Bool = false)
 	{
+		var str:String = ratingName;
+		var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+
 		if (npsB) {
-			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			if (ClientPrefs.data.lowScore) {
+				if(totalPlayed != 0)
+				{
+					str += '${ratingFC}';
+				}
+
+				scoreTxt.text = (ClientPrefs.data.npsDisplay ?	// NPS Toggle
+				"NPS: " + nps + " (Max " + maxNPS + ")" + " | " : "") +	// 	NPS
+				"Score:" + songScore + 	// Score
+				" | Combo Breaks:" + songMisses + 						// 	Misses
+				" | Accuracy:" + (ClientPrefs.getGameplaySetting('botplay') && !PlayState.loadRep ? "N/A" : percent + " %") + 		// 	Accuracy
+				" | " + str;
+			}
+			else {
+				scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			}
 			return;
 		}
 
@@ -1224,9 +1241,22 @@ class PlayState extends MusicBeatState
 			return;
 
 		if (KEmode) {
-			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+			if (ClientPrefs.data.lowScore) {
+				if(totalPlayed != 0)
+				{
+					str += ' (${percent}%) - ${ratingFC}';
+				}
 
-			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+				scoreTxt.text = (ClientPrefs.data.npsDisplay ?	// NPS Toggle
+				"NPS: " + nps + " (Max " + maxNPS + ")" : "" + " | " +	// 	NPS
+				"Score:" + songScore + " (" + songScoreDef + ")" + 		// Score
+				" | Combo Breaks:" + songMisses + 						// 	Misses
+				" | Accuracy:" + (ClientPrefs.getGameplaySetting('botplay') && !PlayState.loadRep ? "N/A" : percent + " %") + 		// 	Accuracy
+				" | " + str);
+			}
+			else {
+				scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			}
 
 			/*var lengthInPx = scoreTxt.textField.length * scoreTxt.frameHeight; // bad way but does more or less a better job
 	
@@ -1234,13 +1264,6 @@ class PlayState extends MusicBeatState
 			scoreTxt.screenCenter(X);
 		}
 		else {
-			var str:String = ratingName;
-			if(totalPlayed != 0)
-			{
-				var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-				str += ' (${percent}%) - ${ratingFC}';
-			}
-
 			var tempScore:String = 'Score: ${songScore}'
 			+ (!instakillOnMiss ? ' | Misses: ${songMisses}' : "")
 			+ ' | Rating: ${str}';
@@ -1764,7 +1787,7 @@ class PlayState extends MusicBeatState
 		setOnScripts('curDecBeat', curDecBeat);
 
 		// Kade Engine Mode NPS Counter
-		if (KEmode)
+		if (KEmode && ClientPrefs.data.npsDisplay)
 		{
 			var balls = notesHitArray.length - 1;
 			while (balls >= 0)
@@ -2639,7 +2662,9 @@ class PlayState extends MusicBeatState
 					if (gainHealth) health += note.hitHealth * healthGain;
 			}
 
-			saveJudge.push(daRating.name);
+			if (ClientPrefs.data.scoreScreen) {
+				saveJudge.push(daRating.name);
+			}
 		}
 
 		totalNotesHit += daRating.ratingMod;
@@ -2894,7 +2919,7 @@ class PlayState extends MusicBeatState
 			{
 				// trace('ReplayNote ' + tmpRepNote.strumtime + ' | ' + tmpRepNote.direction);
 				var n = findByTime(funnyNote.strumTime);
-				trace(n);
+				//trace(n);
 				if (n != null)
 				{
 					goodNoteHit(funnyNote);
@@ -2902,7 +2927,7 @@ class PlayState extends MusicBeatState
 			}
 			else {
 				goodNoteHit(funnyNote);
-				trace("press");
+				//trace("press");
 			}
 		}
 		else if(shouldMiss)
