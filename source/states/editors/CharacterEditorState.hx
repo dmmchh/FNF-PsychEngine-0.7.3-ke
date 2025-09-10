@@ -21,10 +21,9 @@ import objects.Bar;
 
 // flixel 5.7.0+ fix
 #if (FLX_DEBUG || flixel < version("5.7.0"))
-typedef PointerGraphic = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
+typedef GraphicCursorCross = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 #else @:bitmap("assets/images/debugger/cursorCross.png")
-class PointerGraphic extends openfl.display.BitmapData 
-{}
+class GraphicCursorCross extends openfl.display.BitmapData {}
 #end
 
 class CharacterEditorState extends MusicBeatState
