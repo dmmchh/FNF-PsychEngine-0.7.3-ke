@@ -201,7 +201,7 @@ class FreeplayState extends MusicBeatState
 	public static var vocals:FlxSound = null;
 	var holdTime:Float = 0;
 
-	var replay:Bool = true;
+	var replay:Bool = false;
 
 	override function update(elapsed:Float)
 	{
