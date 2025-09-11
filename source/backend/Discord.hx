@@ -10,7 +10,7 @@ class DiscordClient
 	public static var isInitialized:Bool = false;
 	private static final _defaultID:String = "863222024192262205";
 	public static var clientID(default, set):String = _defaultID;
-	private static var presence:DiscordRichPresence = new DiscordRichPresence();
+	private static var presence:DiscordRichPresence = #if (hxdiscord_rpc < version("1.3.0")) DiscordRichPresence.create() #else new DiscordRichPresence() #end;
 
 	public static function check()
 	{
@@ -54,11 +54,11 @@ class DiscordClient
 
 	public static function initialize()
 	{
-		var discordHandlers:DiscordEventHandlers = new DiscordEventHandlers();
+		var discordHandlers:DiscordEventHandlers = #if (hxdiscord_rpc < version("1.3.0")) DiscordEventHandlers.create() #else new DiscordEventHandlers() #end;
 		discordHandlers.ready = cpp.Function.fromStaticFunction(onReady);
 		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
 		discordHandlers.errored = cpp.Function.fromStaticFunction(onError);
-		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), true, null);
+		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), #if (hxdiscord_rpc < version("1.3.0")) 1 #else true #end, null);
 
 		if(!isInitialized) trace("Discord Client initialized");
 
