@@ -110,9 +110,9 @@ class Replay
 		#if sys
 		var array:Array<String> = ["replays"];
 
-		FileSave.saveContent("replay-" + PlayState.SONG.song + "-time" + time + ".kadeReplay", data, array);
+		FileSave.saveContent("replay-" + PlayState.SONG.song + "-time" + "test" + ".kadeReplay", data, array);
 
-		path = "replay-" + PlayState.SONG.song + "-time" + time + ".kadeReplay"; // for score screen shit
+		path = "replay-" + PlayState.SONG.song + "-time" + "test" + ".kadeReplay"; // for score screen shit
 
 		LoadFromJSON();
 

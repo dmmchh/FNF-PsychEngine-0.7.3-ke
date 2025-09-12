@@ -14,10 +14,13 @@ import flixel.math.FlxMath;
 
 class FreeplayState extends MusicBeatState
 {
-	var songs:Array<SongMetadata> = [];
+	//Kade Engine Mode
+	public static var instance:FreeplayState;
+
+	public var songs:Array<SongMetadata> = [];
 
 	var selector:FlxText;
-	private static var curSelected:Int = 0;
+	public static var curSelected:Int = 0;
 	var lerpSelected:Float = 0;
 	var curDifficulty:Int = -1;
 	private static var lastDifficultyName:String = Difficulty.getDefault();
@@ -56,6 +59,8 @@ class FreeplayState extends MusicBeatState
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;
 		WeekData.reloadWeekFiles(false);
+
+		instance = this;
 
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
@@ -195,6 +200,9 @@ class FreeplayState extends MusicBeatState
 	var instPlaying:Int = -1;
 	public static var vocals:FlxSound = null;
 	var holdTime:Float = 0;
+
+	var replay:Bool = false;
+
 	override function update(elapsed:Float)
 	{
 		if (FlxG.sound.music.volume < 0.7)
@@ -220,6 +228,11 @@ class FreeplayState extends MusicBeatState
 
 		var shiftMult:Int = 1;
 		if(FlxG.keys.pressed.SHIFT) shiftMult = 3;
+
+		if (FlxG.keys.justPressed.F1) {
+			replay = replay ? false : true;
+			trace('replay${replay}');
+		}
 
 		if (!player.playingMusic)
 		{
@@ -369,6 +382,19 @@ class FreeplayState extends MusicBeatState
 
 			try
 			{
+				if (replay)
+				{
+					var path = "replay-" + songLowercase + "-time" + "test" + ".kadeReplay"; // for score screen shit
+
+					PlayState.rep = Replay.LoadReplay(path);
+					trace(path);
+
+					PlayState.loadRep = true;
+				}
+				else {
+					PlayState.loadRep = false;
+				}
+
 				PlayState.SONG = Song.loadFromJson(poop, songLowercase);
 				trace(poop, songLowercase);
 				PlayState.isStoryMode = false;

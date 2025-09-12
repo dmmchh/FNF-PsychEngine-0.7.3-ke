@@ -39,6 +39,13 @@ class KadeEngineMode extends BaseOptionsMenu
         addOption(option);
         kadeArray.push(option);
 
+        var option:Option = new Option('lowScore KE', //Name
+        'If checked, lowlowlowScore math', //Description
+        'lowScore', //Save data variable name
+        'bool'); //Variable type
+        addOption(option);
+        kadeArray.push(option);
+
         /*if (!ClientPrefs.data.kadeEngineMode)
         {
             for (i in 0...kadeArray.length)

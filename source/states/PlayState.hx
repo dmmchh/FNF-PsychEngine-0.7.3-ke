@@ -279,6 +279,8 @@ class PlayState extends MusicBeatState
 	private var saveJudge:Array<String> = [];
 	private var replayAna:Analysis = new Analysis(); // replay analysis
 
+	public static var theFunne:Bool = true;
+
 	public static var originalX:Float;
 
 	public var highestCombo:Int = 0;
@@ -734,6 +736,9 @@ class PlayState extends MusicBeatState
 		Paths.clearUnusedMemory();
 
 		if(eventNotes.length < 1) checkEventNote();
+
+		if (KEmode && loadRep)
+			FlxG.autoPause = false;
 	}
 
 	function set_songSpeed(value:Float):Float
@@ -1213,9 +1218,32 @@ class PlayState extends MusicBeatState
 	// cool right? -Crow
 	public dynamic function updateScore(miss:Bool = false, npsB:Bool = false)
 	{
+		var str:String = ratingName;
+		var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+		var scoreText:String = "";
+
+		if (KEmode && ClientPrefs.data.lowScore)
+		{
+			if(totalPlayed != 0)
+			{
+				str += ' - ${ratingFC}';
+			}
+
+			scoreText = (ClientPrefs.data.npsDisplay ?	// NPS Toggle
+				"NPS: " + nps + " (Max " + maxNPS + ")" : "") + (!ClientPrefs.getGameplaySetting('botplay') || PlayState.loadRep ? " | " : "") +	// 	NPS
+				(!ClientPrefs.getGameplaySetting('botplay') || PlayState.loadRep ? "Score:" + songScore + 	// Score
+				" | Combo Breaks:" + songMisses + 			// 	Misses
+				" | Accuracy:" + (ClientPrefs.getGameplaySetting('botplay') && !PlayState.loadRep ? "N/A" : percent + " %") + 		// 	Accuracy
+				" | " + str : "");
+		}
+
 		if (npsB) {
-			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			if (ClientPrefs.data.lowScore) {
+				scoreTxt.text = scoreText;
+			}
+			else {
+				scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			}
 			return;
 		}
 
@@ -1224,9 +1252,12 @@ class PlayState extends MusicBeatState
 			return;
 
 		if (KEmode) {
-			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-
-			scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			if (ClientPrefs.data.lowScore) {
+				scoreTxt.text = scoreText;
+			}
+			else {
+				scoreTxt.text = Rating.CalculateRanking(songScore, songScoreDef, nps, maxNPS, percent);
+			}
 
 			/*var lengthInPx = scoreTxt.textField.length * scoreTxt.frameHeight; // bad way but does more or less a better job
 	
@@ -1234,13 +1265,6 @@ class PlayState extends MusicBeatState
 			scoreTxt.screenCenter(X);
 		}
 		else {
-			var str:String = ratingName;
-			if(totalPlayed != 0)
-			{
-				var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-				str += ' (${percent}%) - ${ratingFC}';
-			}
-
 			var tempScore:String = 'Score: ${songScore}'
 			+ (!instakillOnMiss ? ' | Misses: ${songMisses}' : "")
 			+ ' | Rating: ${str}';
@@ -1764,7 +1788,7 @@ class PlayState extends MusicBeatState
 		setOnScripts('curDecBeat', curDecBeat);
 
 		// Kade Engine Mode NPS Counter
-		if (KEmode)
+		if (KEmode && ClientPrefs.data.npsDisplay)
 		{
 			var balls = notesHitArray.length - 1;
 			while (balls >= 0)
@@ -1785,6 +1809,7 @@ class PlayState extends MusicBeatState
 		if(botplayTxt != null && botplayTxt.visible) {
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
+			replayTxt.alpha = botplayTxt.alpha;
 		}
 
 		if (controls.PAUSE && startedCountdown && canPause)
@@ -1896,10 +1921,19 @@ class PlayState extends MusicBeatState
 							var strum:StrumNote = strumGroup.members[daNote.noteData];
 							daNote.followStrumNote(strum, fakeCrochet, songSpeed / playbackRate);
 
+							// onKeyPress
+
 							if(daNote.mustPress)
 							{
 								if(cpuControlled && !loadRep && !daNote.blockHit && daNote.canBeHit && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition)) {
 									goodNoteHit(daNote);
+								}
+								else if (cpuControlled && loadRep && KEmode && daNote.canBeHit || cpuControlled && loadRep && KEmode && daNote.tooLate) {
+									if (findByTime(daNote.strumTime) != null && (daNote.isSustainNote || daNote.strumTime <= Conductor.songPosition))
+									{
+										goodNoteHit(daNote);
+										//trace(daNote.strumTime + (Conductor.songPosition - daNote.strumTime));
+									}
 								}
 							}
 							else if (daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
@@ -2619,27 +2653,31 @@ class PlayState extends MusicBeatState
 		if (guitarHeroSustains && note.isSustainNote) gainHealth = false;
 
 		if (KEmode) {
-			switch (daRating.name)
-			{
-				case 'shit':
-					shits++;
+			if (!loadRep) {
+				switch (daRating.name)
+				{
+					case 'shit':
+						shits++;
 
-					songScore -= 300;
-					combo = 0;
-					songMisses++;
-					health -= (note.missHealth - 0.04) * healthLoss;
-				case 'bad':
-					bads++;
+						songScore -= 300;
+						combo = 0;
+						songMisses++;
+						health -= (note.missHealth - 0.04) * healthLoss;
+					case 'bad':
+						bads++;
 
-					health -= (note.missHealth - 0.08) * healthLoss;
-				case 'good':
-					goods++;
-				case 'sick':
-					sicks++;
-					if (gainHealth) health += note.hitHealth * healthGain;
+						health -= (note.missHealth - 0.08) * healthLoss;
+					case 'good':
+						goods++;
+					case 'sick':
+						sicks++;
+						if (gainHealth) health += note.hitHealth * healthGain;
+				}
+		}
+
+			if (ClientPrefs.data.scoreScreen) {
+				saveJudge.push(daRating.name);
 			}
-
-			saveJudge.push(daRating.name);
 		}
 
 		totalNotesHit += daRating.ratingMod;
@@ -2838,7 +2876,7 @@ class PlayState extends MusicBeatState
 	public var strumsBlocked:Array<Bool> = [];
 	private function onKeyPress(event:KeyboardEvent):Void
 	{
-
+		if (cpuControlled && loadRep && KEmode) return;
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = getKeyFromEvent(keysArray, eventKey);
 
@@ -2855,7 +2893,7 @@ class PlayState extends MusicBeatState
 
 	private function keyPressed(key:Int)
 	{
-		if(cpuControlled || paused || inCutscene || key < 0 || key >= playerStrums.length || !generatedMusic || endingSong || boyfriend.stunned) return;
+		if(cpuControlled && !loadRep || paused || inCutscene || key < 0 || key >= playerStrums.length || !generatedMusic || endingSong || boyfriend.stunned) return;
 
 		var ret:Dynamic = callOnScripts('onKeyPressPre', [key]);
 		if(ret == LuaUtils.Function_Stop) return;
@@ -2892,9 +2930,8 @@ class PlayState extends MusicBeatState
 			}
 			if (KEmode && loadRep)
 			{
-				// trace('ReplayNote ' + tmpRepNote.strumtime + ' | ' + tmpRepNote.direction);
 				var n = findByTime(funnyNote.strumTime);
-				trace(n);
+				//trace('ReplayNote ' + funnyNote.strumTime + ' | ' + funnyNote.noteData);
 				if (n != null)
 				{
 					goodNoteHit(funnyNote);
@@ -2902,7 +2939,7 @@ class PlayState extends MusicBeatState
 			}
 			else {
 				goodNoteHit(funnyNote);
-				trace("press");
+				//trace("press");
 			}
 		}
 		else if(shouldMiss)
@@ -2942,9 +2979,11 @@ class PlayState extends MusicBeatState
 	{
 		for (i in 0...rep.replay.songNotes.length)
 		{
-			// trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
-			if (rep.replay.songNotes[i][0] == time)
+			//trace('checking ' + Math.round(i[0]) + ' against ' + Math.round(time));
+			if (rep.replay.songNotes[i][0] == time) {
+				//trace(time, i);
 				return i;
+			}
 		}
 		return -1;
 	}
@@ -3027,12 +3066,12 @@ class PlayState extends MusicBeatState
 					keyPressed(i);
 				}
 		
-		if(KEmode) {
+		if(KEmode && !loadRep) {
 			for (i in 0...pressArray.length)
 				if(pressArray[i] && strumsBlocked[i] != true) {
 					anas[i] = new Ana(Conductor.songPosition, null, false, "miss", i);
 				}
-			}
+		}
 
 		if (startedCountdown && !inCutscene && !boyfriend.stunned && generatedMusic)
 		{
@@ -3051,6 +3090,7 @@ class PlayState extends MusicBeatState
 						var released:Bool = !holdArray[n.noteData];
 						if (!released)
 							goodNoteHit(n);
+						trace(released);
 					}
 				}
 			}
@@ -3256,7 +3296,7 @@ class PlayState extends MusicBeatState
 	public function goodNoteHit(note:Note):Void
 	{
 		if(note.wasGoodHit) return;
-		if(cpuControlled && note.ignoreNote) return;
+		if(cpuControlled && note.ignoreNote && !loadRep) return;
 
 		var isSus:Bool = note.isSustainNote; //GET OUT OF MY HEAD, GET OUT OF MY HEAD, GET OUT OF MY HEAD
 		var leData:Int = Math.round(Math.abs(note.noteData));

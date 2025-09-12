@@ -80,6 +80,7 @@ import states.TitleState;
 	public var kadeEngineMode:Bool = false;
 
 	public var npsDisplay:Bool = true;
+	public var lowScore:Bool = false;
 	public var healthBarColor:Bool = false;
 	public var scoreScreen:Bool = true;
 }

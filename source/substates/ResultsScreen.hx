@@ -34,6 +34,7 @@ import backend.Rating;
 import backend.HelperFunctions;
 import backend.Highscore;
 import backend.Song;
+import backend.WeekData;
 
 import states.MainMenuState;
 import states.FreeplayState;
@@ -256,6 +257,15 @@ class ResultsScreen extends FlxSubState
             music.fadeOut(0.3);
 
             try {
+                for (i in 0...WeekData.weeksList.length) {
+                    var leWeek:WeekData = WeekData.weeksLoaded.get(WeekData.weeksList[i]);
+
+                    WeekData.setDirectoryFromWeek(leWeek);
+                    Mods.loadTopMod();
+                }
+
+                Mods.currentModDirectory = FreeplayState.instance.songs[FreeplayState.curSelected].folder;
+
                 PlayState.SONG = Song.loadFromJson(poop, PlayState.SONG.song);
                 PlayState.isStoryMode = false;
                 PlayState.storyDifficulty = PlayState.rep.replay.songDiff;
