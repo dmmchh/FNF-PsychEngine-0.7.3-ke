@@ -140,6 +140,15 @@ class Highscore
 		return songRating.get(daSong);
 	}
 
+	public static function getCombo(song:String, diff:Int):String
+	{
+		var daSong:String = formatSong(song, diff);
+		if (!songCombos.exists(daSong))
+			setCombo(daSong, '');
+
+		return songCombos.get(daSong);
+	}
+
 	public static function getWeekScore(week:String, diff:Int):Int
 	{
 		var daWeek:String = formatSong(week, diff);

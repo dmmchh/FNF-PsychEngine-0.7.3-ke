@@ -4,6 +4,9 @@ import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
 
+import sys.thread.Thread;
+import sys.thread.Mutex;
+
 import objects.HealthIcon;
 import objects.MusicPlayer;
 
@@ -19,19 +22,23 @@ class FreeplayState extends MusicBeatState
 
 	public var songs:Array<SongMetadata> = [];
 
-	var selector:FlxText;
 	public static var curSelected:Int = 0;
+	private static var lastDifficultyName:String = Difficulty.getDefault();
+
 	var lerpSelected:Float = 0;
 	var curDifficulty:Int = -1;
-	private static var lastDifficultyName:String = Difficulty.getDefault();
 
 	var scoreBG:FlxSprite;
 	var scoreText:FlxText;
+	var comboText:FlxText;
 	var diffText:FlxText;
+	var diffCalcText:FlxText;
+
 	var lerpScore:Int = 0;
 	var lerpRating:Float = 0;
 	var intendedScore:Int = 0;
 	var intendedRating:Float = 0;
+	var combo:String = '';
 
 	private var grpSongs:FlxTypedGroup<Alphabet>;
 	private var curPlaying:Bool = false;
@@ -132,16 +139,32 @@ class FreeplayState extends MusicBeatState
 		scoreText = new FlxText(FlxG.width * 0.7, 5, 0, "", 32);
 		scoreText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, RIGHT);
 
-		scoreBG = new FlxSprite(scoreText.x - 6, 0).makeGraphic(1, 66, 0xFF000000);
+		scoreBG = new FlxSprite(scoreText.x - 6, 0);
 		scoreBG.alpha = 0.6;
 		add(scoreBG);
 
 		diffText = new FlxText(scoreText.x, scoreText.y + 36, 0, "", 24);
 		diffText.font = scoreText.font;
+
+		if (ClientPrefs.data.kadeEngineMode)
+		{
+			scoreBG.makeGraphic(1, 105, 0xFF000000);
+
+			diffCalcText = new FlxText(scoreText.x, scoreText.y + 66, 0, "", 24);
+			diffCalcText.font = scoreText.font;
+			add(diffCalcText);
+
+			comboText = new FlxText(diffText.x + 100, diffText.y, 0, "", 24);
+			comboText.font = diffText.font;
+			add(comboText);
+		}
+		else
+		{
+			scoreBG.makeGraphic(1, 66, 0xFF000000);
+		}
+
 		add(diffText);
-
 		add(scoreText);
-
 
 		missingTextBG = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		missingTextBG.alpha = 0.6;
@@ -197,8 +220,8 @@ class FreeplayState extends MusicBeatState
 		return (!leWeek.startUnlocked && leWeek.weekBefore.length > 0 && (!StoryMenuState.weekCompleted.exists(leWeek.weekBefore) || !StoryMenuState.weekCompleted.get(leWeek.weekBefore)));
 	}
 
-	var instPlaying:Int = -1;
 	public static var vocals:FlxSound = null;
+	var instPlaying:Int = -1;
 	var holdTime:Float = 0;
 
 	var replay:Bool = false;
@@ -236,7 +259,14 @@ class FreeplayState extends MusicBeatState
 
 		if (!player.playingMusic)
 		{
-			scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
+			if (ClientPrefs.data.kadeEngineMode)
+			{
+				scoreText.text = "PERSONAL BEST:" + lerpScore;
+				comboText.text = combo + '\n';
+			}
+			else
+				scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
+
 			positionHighscore();
 			
 			if(songs.length > 1)
@@ -253,14 +283,9 @@ class FreeplayState extends MusicBeatState
 					changeSelection();
 					holdTime = 0;	
 				}
-				if (controls.UI_UP_P)
+				if (controls.UI_UP_P || controls.UI_DOWN_P)
 				{
-					changeSelection(-shiftMult);
-					holdTime = 0;
-				}
-				if (controls.UI_DOWN_P)
-				{
-					changeSelection(shiftMult);
+					changeSelection(controls.UI_UP_P ? -shiftMult : shiftMult);
 					holdTime = 0;
 				}
 
@@ -281,14 +306,9 @@ class FreeplayState extends MusicBeatState
 				}
 			}
 
-			if (controls.UI_LEFT_P)
+			if (controls.UI_LEFT_P || controls.UI_RIGHT_P)
 			{
-				changeDiff(-1);
-				_updateSongLastDifficulty();
-			}
-			else if (controls.UI_RIGHT_P)
-			{
-				changeDiff(1);
+				changeDiff(controls.UI_LEFT_P ? -1 : 1);
 				_updateSongLastDifficulty();
 			}
 		}
@@ -454,23 +474,23 @@ class FreeplayState extends MusicBeatState
 		if (player.playingMusic)
 			return;
 
-		curDifficulty += change;
-
-		if (curDifficulty < 0)
-			curDifficulty = Difficulty.list.length-1;
-		if (curDifficulty >= Difficulty.list.length)
-			curDifficulty = 0;
+		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
 
 		#if !switch
 		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
 		intendedRating = Highscore.getRating(songs[curSelected].songName, curDifficulty);
+		combo = Highscore.getCombo(songs[curSelected].songName, curDifficulty);
 		#end
 
 		lastDifficultyName = Difficulty.getString(curDifficulty);
-		if (Difficulty.list.length > 1)
-			diffText.text = '< ' + lastDifficultyName.toUpperCase() + ' >';
-		else
-			diffText.text = lastDifficultyName.toUpperCase();
+
+		var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
+		var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
+		diffCalcText.text = 'RATING: ${backend.DiffCalc.CalculateDiff(Song.loadFromJson(poop, songLowercase))}';
+		diffText.text = (
+			(Difficulty.list.length > 1 && !ClientPrefs.data.kadeEngineMode) ?
+			'< ' + lastDifficultyName.toUpperCase() + ' >' : lastDifficultyName.toUpperCase()
+		);
 
 		positionHighscore();
 		missingText.visible = false;
@@ -481,18 +501,13 @@ class FreeplayState extends MusicBeatState
 	{
 		if (player.playingMusic)
 			return;
-
-		_updateSongLastDifficulty();
-		if(playSound) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		if(playSound)
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 
 		var lastList:Array<String> = Difficulty.list;
-		curSelected += change;
+		curSelected = FlxMath.wrap(curSelected + change, 0, songs.length-1);
+		_updateSongLastDifficulty();
 
-		if (curSelected < 0)
-			curSelected = songs.length - 1;
-		if (curSelected >= songs.length)
-			curSelected = 0;
-			
 		var newColor:Int = songs[curSelected].color;
 		if(newColor != intendedColor) {
 			if(colorTween != null) {
@@ -506,15 +521,10 @@ class FreeplayState extends MusicBeatState
 			});
 		}
 
-		// selector.y = (70 * curSelected) + 30;
-
 		var bullShit:Int = 0;
 
 		for (i in 0...iconArray.length)
-		{
 			iconArray[i].alpha = 0.6;
-		}
-
 		iconArray[curSelected].alpha = 1;
 
 		for (item in grpSongs.members)
@@ -550,11 +560,24 @@ class FreeplayState extends MusicBeatState
 	}
 
 	private function positionHighscore() {
-		scoreText.x = FlxG.width - scoreText.width - 6;
-		scoreBG.scale.x = FlxG.width - scoreText.x + 6;
-		scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
-		diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
-		diffText.x -= diffText.width / 2;
+		if (ClientPrefs.data.kadeEngineMode)
+		{
+			scoreText.x = FlxG.width - scoreText.width-6;
+			scoreBG.scale.x = FlxG.width - scoreText.x + 6;
+			scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
+
+			diffText.setPosition(scoreText.x, scoreText.y + 36);
+			diffCalcText.setPosition(scoreText.x, scoreText.y + 66);
+			comboText.setPosition(scoreText.x + 100, diffText.y);
+		}
+		else
+		{
+			scoreText.x = FlxG.width - scoreText.width - 6;
+			scoreBG.scale.x = FlxG.width - scoreText.x + 6;
+			scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
+			diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
+			diffText.x -= diffText.width / 2;
+		}
 	}
 
 	var _drawDistance:Int = 4;
