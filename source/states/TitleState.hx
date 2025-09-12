@@ -4,11 +4,11 @@ import backend.WeekData;
 import backend.Highscore;
 
 import flixel.input.keyboard.FlxKey;
+import flixel.input.gamepad.FlxGamepad;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
 import flixel.group.FlxGroup;
-import flixel.input.gamepad.FlxGamepad;
 import haxe.Json;
 
 import openfl.Assets;
@@ -656,6 +656,13 @@ class TitleState extends MusicBeatState
 				remove(ngSpr);
 				remove(credGroup);
 				FlxG.camera.flash(FlxColor.WHITE, 4);
+
+				if (ClientPrefs.data.kadeEngineMode)
+				{
+					logoBl.y = FlxG.height;
+					FlxTween.tween(logoBl,{y: titleJSON.titley}, 1.4, {ease: FlxEase.expoInOut});
+					FlxTween.angle(logoBl, logoBl.angle, 4, 4, {type: FlxTweenType.PINGPONG, ease: FlxEase.quartInOut});
+				}
 
 				var easteregg:String = FlxG.save.data.psychDevsEasterEgg;
 				if (easteregg == null) easteregg = '';
