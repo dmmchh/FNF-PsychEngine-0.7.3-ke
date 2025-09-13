@@ -2686,8 +2686,8 @@ class PlayState extends MusicBeatState
 		if(!note.ratingDisabled) daRating.hits++;
 		if (KEmode && loadRep)
 		{
-			noteDiff = findByTime(note.strumTime)[3];
-			note.rating = rep.replay.songJudgements[findByTimeIndex(note.strumTime)];
+			//noteDiff = findByTime(note.strumTime)[3];
+			//note.rating = rep.replay.songJudgements[findByTimeIndex(note.strumTime)];
 		}
 		else
 			note.rating = daRating.name;
