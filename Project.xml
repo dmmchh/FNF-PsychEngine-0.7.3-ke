@@ -89,9 +89,9 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel" version="5.8.0"/>
-	<haxelib name="flixel-ui" />
-	<haxelib name="flixel-addons" />
+	<haxelib name="flixel"/>
+	<haxelib name="flixel-ui"/>
+	<haxelib name="flixel-addons"/>
 	<haxelib name="tjson" />
 
 	<!--Psych stuff needed-->

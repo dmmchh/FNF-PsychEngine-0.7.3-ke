@@ -275,7 +275,7 @@ class FreeplayState extends MusicBeatState
 				{
 					curSelected = 0;
 					changeSelection();
-					holdTime = 0;	
+					holdTime = 0;
 				}
 				else if(FlxG.keys.justPressed.END)
 				{
