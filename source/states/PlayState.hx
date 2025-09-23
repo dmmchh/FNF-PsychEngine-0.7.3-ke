@@ -1637,7 +1637,7 @@ class PlayState extends MusicBeatState
 				else if(ClientPrefs.data.middleScroll) targetAlpha = 0.35;
 			}
 
-			var babyArrow:StrumNote = new StrumNote(strumLineX - 10, strumLineY, i, player);
+			var babyArrow:StrumNote = new StrumNote(KEmode? strumLineX - 40 : strumLineX, strumLineY, i, player);
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
 			if (!isStoryMode && !skipArrowStartTween)
 			{
@@ -3089,9 +3089,19 @@ class PlayState extends MusicBeatState
 					}
 					else if (canHit && n.isSustainNote) {
 						var released:Bool = !holdArray[n.noteData];
-						if (!released)
-							goodNoteHit(n);
-						trace(released);
+						if (KEmode) {
+							if (!released)
+								goodNoteHit(n);
+							else {
+								n.isSustainNote = false;
+								goodNoteHit(n);
+							}
+						}
+						else {
+							if (!released)
+								goodNoteHit(n);
+						}
+						//trace(released);
 					}
 				}
 			}
