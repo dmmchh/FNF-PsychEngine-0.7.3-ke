@@ -486,7 +486,13 @@ class FreeplayState extends MusicBeatState
 
 		var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 		var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
-		diffCalcText.text = 'RATING: ${backend.DiffCalc.CalculateDiff(Song.loadFromJson(poop, songLowercase))}';
+		try {
+			diffCalcText.text = 'RATING: ${backend.DiffCalc.CalculateDiff(Song.loadFromJson(poop, songLowercase))}';
+		}
+		catch(e:Dynamic)
+		{
+			diffCalcText.text = 'RATING: None';
+		}
 		diffText.text = (
 			(Difficulty.list.length > 1 && !ClientPrefs.data.kadeEngineMode) ?
 			'< ' + lastDifficultyName.toUpperCase() + ' >' : lastDifficultyName.toUpperCase()

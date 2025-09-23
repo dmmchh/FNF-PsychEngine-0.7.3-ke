@@ -23,7 +23,7 @@ class DiffCalc
 
     public static function CalculateDiff(song:SwagSong, ?accuracy:Float = .93)
     {
-        trace('calcuilafjwaf');
+        //trace('calcuilafjwaf');
         // cleaned notes
         var cleanedNotes:Array<SmallNote> = [];
 
