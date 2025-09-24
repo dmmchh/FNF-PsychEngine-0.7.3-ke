@@ -15,6 +15,18 @@ import openfl.utils.Dictionary;
 import backend.Song;
 import backend.FileSave;
 
+typedef KeyPress =
+{
+    public var time:Float;
+    public var key:String;
+}
+
+typedef KeyRelease =
+{
+    public var time:Float;
+    public var key:String;
+}
+
 class Ana
 {
 	public var hitTime:Float;
@@ -52,6 +64,8 @@ typedef ReplayJSON =
 	public var isDownscroll:Bool;
 	public var sf:Int;
 	public var ana:Analysis;
+    public var keyPresses:Array<KeyPress>;
+    public var keyReleases:Array<KeyRelease>;
 }
 
 class Replay
@@ -66,6 +80,8 @@ class Replay
 		replay = {
 			songName: "No Song Found", 
 			songDiff: 1,
+			keyPresses: [],
+            keyReleases: [],
 			noteSpeed: 1.5,
 			isDownscroll: false,
 			songNotes: [],
@@ -93,6 +109,8 @@ class Replay
 		var json = {
 			"songName": PlayState.SONG.song,
 			"songDiff": PlayState.storyDifficulty,
+            "keyPresses": replay.keyPresses,
+            "keyReleases": replay.keyReleases,
 			"noteSpeed": (FlxG.save.data.scrollSpeed > 1 ? FlxG.save.data.scrollSpeed : PlayState.SONG.speed),
 			"isDownscroll": FlxG.save.data.downscroll,
 			"songNotes": notearray,

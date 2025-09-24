@@ -1098,10 +1098,17 @@ class CharacterEditorState extends MusicBeatState
 
 	inline function updateHealthBar()
 	{
-		healthColorStepperR.value = character.healthColorArray[0];
-		healthColorStepperG.value = character.healthColorArray[1];
-		healthColorStepperB.value = character.healthColorArray[2];
-		healthBar.leftBar.color = healthBar.rightBar.color = FlxColor.fromRGB(character.healthColorArray[0], character.healthColorArray[1], character.healthColorArray[2]);
+		if (PlayState.instance.KEmode && ClientPrefs.data.healthBarColor) {
+			healthBar.leftBar.color = FlxColor.fromRGB(255, 0, 0);
+			healthBar.rightBar.color = FlxColor.fromRGB(0, 255, 0);
+		}
+		else {
+			healthColorStepperR.value = character.healthColorArray[0];
+			healthColorStepperG.value = character.healthColorArray[1];
+			healthColorStepperB.value = character.healthColorArray[2];
+			healthBar.leftBar.color = healthBar.rightBar.color = FlxColor.fromRGB(character.healthColorArray[0], character.healthColorArray[1], character.healthColorArray[2]);
+		}
+
 		healthIcon.changeIcon(character.healthIcon, false);
 		updatePresence();
 	}
