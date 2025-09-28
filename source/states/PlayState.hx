@@ -1913,7 +1913,7 @@ class PlayState extends MusicBeatState
 			{
 				var anas:Array<Ana> = [null, null, null, null];
 
-				if(!cpuControlled || cpuControlled && loadRep && KEmode)
+				if(!cpuControlled || cpuControlled && loadRep)
 					keysCheck();
 				else
 					playerDance();
@@ -2880,6 +2880,8 @@ class PlayState extends MusicBeatState
 	var rightHold:Bool = false;
 	var leftHold:Bool = false;	
 
+	var pressControlArray:Array<Bool>;
+
 	private function keyshit()
 	{
 		var up = controls.NOTE_UP;
@@ -2949,6 +2951,7 @@ class PlayState extends MusicBeatState
 		}
 
 		var controlArray:Array<Bool> = [leftP, downP, upP, rightP];
+		pressControlArray = [upHold, rightHold, rightHold, leftHold];
 
 		for (i in 0...4) {
 			if (controlArray[i]) {
@@ -2959,7 +2962,6 @@ class PlayState extends MusicBeatState
 				trace(repPresses);
 			}
 		}
-
 	}
 
 	public var strumsBlocked:Array<Bool> = [];
@@ -3120,14 +3122,23 @@ class PlayState extends MusicBeatState
 		var holdArray:Array<Bool> = [];
 		var pressArray:Array<Bool> = [];
 		var releaseArray:Array<Bool> = [];
-		for (key in keysArray)
-		{
-			holdArray.push(controls.pressed(key));
-			if(controls.controllerMode)
+		if (!loadRep) {
+			for (key in keysArray)
 			{
-				pressArray.push(controls.justPressed(key));
-				releaseArray.push(controls.justReleased(key));
+				holdArray.push(controls.pressed(key));
+				if(controls.controllerMode)
+				{
+					pressArray.push(controls.justPressed(key));
+					releaseArray.push(controls.justReleased(key));
+				}
 			}
+		}
+
+		if (cpuControlled && loadRep) {
+			/*for (key in pressControlArray)
+			{
+				holdArray.push(key);
+			}*/
 		}
 
 		var anas:Array<Ana> = [null, null, null, null];
@@ -3160,7 +3171,7 @@ class PlayState extends MusicBeatState
 						var released:Bool = !holdArray[n.noteData];
 						if (!released)
 							goodNoteHit(n); // 长条
-						//trace(released);
+						trace(released);
 					}
 				}
 			}
